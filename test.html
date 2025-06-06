@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imnoir - Account Setup</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #000000;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Arial', sans-serif;
+    }
+    .setup-container {
+      max-width: 500px;
+      width: 100%;
+    }
+    .card {
+      background-color: #ffffff;
+      border: 1px solid #000000;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary {
+      background-color: #000000;
+      border-color: #000000;
+    }
+    .btn-primary:hover {
+      background-color: #333333;
+      border-color: #333333;
+    }
+    .form-control, .form-select {
+      border-color: #000000;
+      background-color: #f8f8f8;
+      color: #000000;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: #000000;
+      box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+      background-color: #ffffff;
+    }
+    .modal-content {
+      border: 1px solid #000000;
+      border-radius: 10px;
+    }
+    .modal-header {
+      background-color: #000000;
+      color: #ffffff;
+      border-bottom: none;
+    }
+    .modal-footer {
+      border-top: none;
+    }
+    .text-danger {
+      color: #ff0000 !important;
+    }
+    .text-success {
+      color: #28a745 !important;
+    }
+    .form-check-input:checked {
+      background-color: #000000;
+      border-color: #000000;
+    }
+    .form-check-input:focus {
+      box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="setup-container">
+    <div class="card p-4">
+      <h1 class="text-center mb-4 fw-bold">Welcome to Imnoir!</h1>
+      <h2 class="h5 mb-3 fw-bold">Choose Your Account Type</h2>
+      <div class="mb-3">
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="accountType" id="creator" value="Creator/Artist" checked>
+          <label class="form-check-label" for="creator">
+            Creator/Artist
+            <small class="form-text text-muted d-block">Use Imnoir to create your art and post them to earn regularly about 1.41 USD and above.</small>
+          </label>
+        </div>
+        <div class="form-check mt-2">
+          <input class="form-check-input" type="radio" name="accountType" id="regular" value="Regular User">
+          <label class="form-check-label" for="regular">
+            Regular User
+            <small class="form-text text-muted d-block">Watch other's artworks and earn per time spent on Imnoir.</small>
+          </label>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="referralSource" class="form-label">Where did you hear about us?</label>
+        <select class="form-select" id="referralSource">
+          <option value="" disabled selected>Select an option</option>
+          <option value="Search">Search</option>
+          <option value="YouTube">YouTube</option>
+          <option value="Others">Others</option>
+          <option value="Ads">Ads</option>
+        </select>
+      </div>
+      <button id="submitBtn" class="btn btn-primary w-100">Continue</button>
+    </div>
+  </div>
+
+  <!-- Message Modal -->
+  <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="messageModalLabel"></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="messageModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script>
+    // DOM Elements
+    const submitBtn = document.getElementById('submitBtn');
+    const accountTypeRadios = document.getElementsByName('accountType');
+    const referralSource = document.getElementById('referralSource');
+    const messageModal = document.getElementById('messageModal');
+    const messageModalLabel = document.getElementById('messageModalLabel');
+    const messageModalBody = document.getElementById('messageModalBody');
+
+    // Show Message Modal
+    function showMessage(title, message, isError = true) {
+      messageModalLabel.textContent = title;
+      messageModalBody.textContent = message;
+      messageModalBody.className = `modal-body ${isError ? 'text-danger' : 'text-success'}`;
+      const modal = new bootstrap.Modal(messageModal);
+      modal.show();
+    }
+
+    // Validate Form
+    function validateForm() {
+      const selectedAccountType = Array.from(accountTypeRadios).find(radio => radio.checked)?.value;
+      if (!selectedAccountType) {
+        showMessage('Error', 'Please select an account type');
+        return false;
+      }
+      if (!referralSource.value) {
+        showMessage('Error', 'Please select where you heard about us');
+        return false;
+      }
+      return { accountType: selectedAccountType, referralSource: referralSource.value };
+    }
+  </script>
+
+  <script type="module">
+    // Firebase Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyADQOVZMkfBV1VTtpCo0nwgeUk451gjKXg",
+      authDomain: "imnoir.firebaseapp.com",
+      projectId: "imnoir",
+      storageBucket: "imnoir.firebasestorage.app",
+      messagingSenderId: "576802816071",
+      appId: "1:576802816071:web:9bcae0c499a1cd0a433162",
+      measurementId: "G-3W2YYC9PND"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM Elements
+    const submitBtn = document.getElementById('submitBtn');
+    const accountTypeRadios = document.getElementsByName('accountType');
+    const referralSource = document.getElementById('referralSource');
+
+    // Submit Handler
+    submitBtn.addEventListener('click', async () => {
+      const validation = validateForm();
+      if (!validation) return;
+
+      const { accountType, referralSource } = validation;
+
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          showMessage('Error', 'You must be logged in to continue');
+          return;
+        }
+
+        await updateDoc(doc(db, 'users', user.uid), {
+          accountType,
+          referralSource,
+          updatedAt: new Date()
+        });
+
+        showMessage('Success', 'Account setup complete!', false);
+        setTimeout(() => {
+          window.location.href = 'home.html';
+        }, 2000);
+      } catch (error) {
+        showMessage('Error', error.message);
+      }
+    });
+
+    // Redirect if not logged in
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = 'auth.html';
+      }
+    });
+  </script>
+</body>
+</html>
