@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imnoir - Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    body {
+      background-color: #ffffff;
+      color: #000000;
+      font-family: 'Arial', sans-serif;
+    }
+    .navbar {
+      background-color: #000000;
+      border-bottom: 1px solid #000000;
+    }
+    .navbar-brand, .nav-link {
+      color: #ffffff !important;
+    }
+    .navbar-brand:hover, .nav-link:hover {
+      color: #cccccc !important;
+    }
+    .profile-img {
+      width: 40px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 1px solid #ffffff;
+    }
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .masonry-grid {
+      column-count: 3;
+      column-gap: 15px;
+    }
+    .grid-item {
+      background-color: #ffffff;
+      border: 1px solid #000000;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      break-inside: avoid;
+      padding: 10px;
+    }
+    .grid-item img {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+    .chat-section {
+      background-color: #f8f8f8;
+      border: 1px solid #000000;
+      border-radius: 10px;
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+    }
+    .chat-input {
+      background-color: #ffffff;
+      border-color: #000000;
+    }
+    .btn-primary {
+      background-color: #000000;
+      border-color: #000000;
+    }
+    .btn-primary:hover {
+      background-color: #333333;
+      border-color: #333333;
+    }
+    .form-control, .form-select {
+      border-color: #000000;
+      background-color: #f8f8f8;
+      color: #000000;
+    }
+    .form-control:focus {
+      border-color: #000000;
+      box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+      background-color: #ffffff;
+    }
+    .modal-content {
+      border: 1px solid #000000;
+      border-radius: 10px;
+    }
+    .modal-header {
+      background-color: #000000;
+      color: #ffffff;
+      border-bottom: none;
+    }
+    .modal-footer {
+      border-top: none;
+    }
+    .text-danger {
+      color: #ff0000 !important;
+    }
+    .text-success {
+      color: #28a745 !important;
+    }
+    @media (max-width: 768px) {
+      .masonry-grid {
+        column-count: 2;
+      }
+    }
+    @media (max-width: 576px) {
+      .masonry-grid {
+        column-count: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Imnoir</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto align-items-center">
+          <li class="nav-item">
+            <span class="nav-link" id="userProfile">
+              <img src="" id="profileImg" class="profile-img me-2" alt="Profile">
+              <span id="username"></span> (<span id="accountType"></span>)
+            </span>
+          </li>
+          <li class="nav-item">
+            <button id="logoutBtn" class="btn btn-outline-light ms-2">Logout</button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <div class="row">
+      <div class="col-lg-8">
+        <div id="uploadSection" class="mb-4 d-none">
+          <h2 class="h5 mb-3 fw-bold">Upload Artwork</h2>
+          <div class="mb-3">
+            <label for="artworkImage" class="form-label">Image</label>
+            <input type="file" class="form-control" id="artworkImage" accept="image/*">
+          </div>
+          <div class="mb-3">
+            <label for="artworkDescription" class="form-label">Description</label>
+            <textarea class="form-control" id="artworkDescription" rows="3" placeholder="Describe your artwork"></textarea>
+          </div>
+          <button id="uploadBtn" class="btn btn-primary w-100">Upload</button>
+        </div>
+        <h2 class="h5 mb-3 fw-bold">Artworks</h2>
+        <div class="masonry-grid" id="artworkGrid"></div>
+      </div>
+      <div class="col-lg-4">
+        <h2 class="h5 mb-3 fw-bold">Chat</h2>
+        <div class="chat-section mb-3" id="chatMessages"></div>
+        <div class="input-group">
+          <input type="text" class="form-control chat-input" id="chatInput" placeholder="Type a message...">
+          <button id="sendChatBtn" class="btn btn-primary">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message Modal -->
+  <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="messageModalLabel"></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="messageModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script>
+    // DOM Elements
+    const logoutBtn = document.getElementById('logoutBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const artworkImage = document.getElementById('artworkImage');
+    const artworkDescription = document.getElementById('artworkDescription');
+    const uploadSection = document.getElementById('uploadSection');
+    const profileImg = document.getElementById('profileImg');
+    const usernameEl = document.getElementById('username');
+    const accountTypeEl = document.getElementById('accountType');
+    const artworkGrid = document.getElementById('artworkGrid');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const messageModal = document.getElementById('messageModal');
+    const messageModalLabel = document.getElementById('messageModalLabel');
+    const messageModalBody = document.getElementById('messageModalBody');
+
+    // Show Message Modal
+    function showMessage(title, message, isError = true) {
+      messageModalLabel.textContent = title;
+      messageModalBody.textContent = message;
+      messageModalBody.className = `modal-body ${isError ? 'text-danger' : 'text-success'}`;
+      const modal = new bootstrap.Modal(messageModal);
+      modal.show();
+    }
+
+    // Validate Artwork Upload
+    function validateArtwork() {
+      if (!artworkImage.files[0]) {
+        showMessage('Error', 'Please select an image');
+        return false;
+      }
+      if (!artworkDescription.value.trim()) {
+        showMessage('Error', 'Please enter a description');
+        return false;
+      }
+      return true;
+    }
+
+    // Display Artwork
+    function displayArtwork(artwork) {
+      const gridItem = document.createElement('div');
+      gridItem.className = 'grid-item';
+      gridItem.innerHTML = `
+        <img src="${artwork.imageUrl}" alt="Artwork">
+        <p class="mt-2 mb-1">${artwork.description}</p>
+        <small class="text-muted">By ${artwork.username} on ${new Date(artwork.createdAt.toDate()).toLocaleString()}</small>
+      `;
+      artworkGrid.appendChild(gridItem);
+    }
+
+    // Display Chat Message
+    function displayChatMessage(message) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'mb-2';
+      msgDiv.innerHTML = `<strong>${message.username}:</strong> ${message.text} <small class="text-muted">(${new Date(message.createdAt.toDate()).toLocaleString()})</small>`;
+      chatMessages.appendChild(msgDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+  </script>
+
+  <script type="module">
+    // Firebase Imports
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, collection, addDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "AIzaSyADQOVZMkfBV1VTtpCo0nwgeUk451gjKXg",
+      authDomain: "imnoir.firebaseapp.com",
+      projectId: "imnoir",
+      storageBucket: "imnoir.firebasestorage.app",
+      messagingSenderId: "576802816071",
+      appId: "1:576802816071:web:9bcae0c499a1cd0a433162",
+      measurementId: "G-3W2YYC9PND"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM Elements
+    const logoutBtn = document.getElementById('logoutBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const artworkImage = document.getElementById('artworkImage');
+    const artworkDescription = document.getElementById('artworkDescription');
+    const uploadSection = document.getElementById('uploadSection');
+    const profileImg = document.getElementById('profileImg');
+    const usernameEl = document.getElementById('username');
+    const accountTypeEl = document.getElementById('accountType');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+    const chatInput = document.getElementById('chatInput');
+
+    // Upload Image to ImgBB
+    async function uploadImageToImgBB(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      try {
+        const response = await fetch('https://api.imgbb.com/1/upload?key=2077df548acf5a4f53658b930c7fe87a', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+        if (data.success) {
+          return data.data.url;
+        } else {
+          throw new Error('Image upload failed');
+        }
+      } catch (error) {
+        throw new Error('Image upload failed: ' + error.message);
+      }
+    }
+
+    // Load User Profile
+    async function loadUserProfile(user) {
+      try {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          usernameEl.textContent = userData.username;
+          accountTypeEl.textContent = userData.accountType || 'Not set';
+          profileImg.src = userData.profileImageUrl || 'https://via.placeholder.com/40';
+          if (userData.accountType === 'Creator/Artist') {
+            uploadSection.classList.remove('d-none');
+          }
+        } else {
+          showMessage('Error', 'User profile not found');
+        }
+      } catch (error) {
+        showMessage('Error', error.message);
+      }
+    }
+
+    // Load Artworks
+    function loadArtworks() {
+      const q = query(collection(db, 'artworks'), orderBy('createdAt', 'desc'));
+      onSnapshot(q, (snapshot) => {
+        artworkGrid.innerHTML = '';
+        snapshot.forEach((doc) => {
+          displayArtwork(doc.data());
+        });
+      });
+    }
+
+    // Load Chat Messages
+    function loadChatMessages() {
+      const q = query(collection(db, 'chatMessages'), orderBy('createdAt', 'asc'));
+      onSnapshot(q, (snapshot) => {
+        chatMessages.innerHTML = '';
+        snapshot.forEach((doc) => {
+          displayChatMessage(doc.data());
+        });
+      });
+    }
+
+    // Upload Artwork
+    uploadBtn.addEventListener('click', async () => {
+      if (!validateArtwork()) return;
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          showMessage('Error', 'You must be logged in to upload');
+          return;
+        }
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists()) {
+          showMessage('Error', 'User profile not found');
+          return;
+        }
+        const userData = userDoc.data();
+        if (userData.accountType !== 'Creator/Artist') {
+          showMessage('Error', 'Only Creators/Artists can upload artworks');
+          return;
+        }
+        const imageUrl = await uploadImageToImgBB(artworkImage.files[0]);
+        await addDoc(collection(db, 'artworks'), {
+          imageUrl,
+          description: artworkDescription.value.trim(),
+          creatorUid: user.uid,
+          username: userData.username,
+          createdAt: new Date()
+        });
+        showMessage('Success', 'Artwork uploaded successfully!', false);
+        artworkImage.value = '';
+        artworkDescription.value = '';
+      } catch (error) {
+        showMessage('Error', error.message);
+      }
+    });
+
+    // Send Chat Message
+    sendChatBtn.addEventListener('click', async () => {
+      const text = chatInput.value.trim();
+      if (!text) {
+        showMessage('Error', 'Please enter a message');
+        return;
+      }
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          showMessage('Error', 'You must be logged in to chat');
+          return;
+        }
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (!userDoc.exists()) {
+          showMessage('Error', 'User profile not found');
+          return;
+        }
+        await addDoc(collection(db, 'chatMessages'), {
+          text,
+          username: userDoc.data().username,
+          createdAt: new Date()
+        });
+        chatInput.value = '';
+      } catch (error) {
+        showMessage('Error', error.message);
+      }
+    });
+
+    // Logout
+    logoutBtn.addEventListener('click', async () => {
+      try {
+        await signOut(auth);
+        window.location.href = 'auth.html';
+      } catch (error) {
+        showMessage('Error', error.message);
+      }
+    });
+
+    // Auth State Listener
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadUserProfile(user);
+        loadArtworks();
+        loadChatMessages();
+      } else {
+        window.location.href = 'auth.html';
+      }
+    });
+  </script>
+</body>
+</html>
