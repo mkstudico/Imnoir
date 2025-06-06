@@ -159,7 +159,7 @@
     // Firebase Imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-    import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
 
     // Firebase Config
     const firebaseConfig = {
@@ -196,11 +196,12 @@
           return;
         }
 
-        await updateDoc(doc(db, 'users', user.uid), {
+        // Use setDoc with merge to create or update the user document
+        await setDoc(doc(db, 'users', user.uid), {
           accountType,
           referralSource,
           updatedAt: new Date()
-        });
+        }, { merge: true });
 
         showMessage('Success', 'Account setup complete!', false);
         setTimeout(() => {
