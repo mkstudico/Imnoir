@@ -3,102 +3,233 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Imnoir - Home</title>
+  <title>Imnoir - Discover Creative Artworks</title>
+  <meta name="description" content="Imnoir - A platform for artists and art enthusiasts to share and discover creative artworks">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
   <style>
+    :root {
+      --primary-color: #000000;
+      --secondary-color: #333333;
+      --accent-color: #4F46E5;
+      --light-gray: #f8f9fa;
+    }
+    
     body {
       background-color: #ffffff;
-      color: #000000;
-      font-family: 'Arial', sans-serif;
+      color: var(--primary-color);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
     }
+    
     .sidebar {
       position: fixed;
       top: 0;
       left: 0;
       height: 100%;
-      width: 60px;
-      background-color: transparent;
+      width: 80px;
+      background-color: var(--light-gray);
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding-top: 20px;
+      padding-top: 30px;
       z-index: 100;
+      border-right: 1px solid #e5e7eb;
+      transition: width 0.3s ease;
     }
+    
+    .sidebar:hover {
+      width: 220px;
+    }
+    
     .sidebar a, .sidebar button {
-      color: #000000;
+      color: var(--primary-color);
       font-size: 24px;
-      margin: 20px 0;
+      margin: 15px 0;
       position: relative;
-      transition: color 0.3s;
+      transition: all 0.3s ease;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0;
+      border-radius: 8px;
     }
+    
     .sidebar a:hover, .sidebar button:hover {
-      color: #333333;
+      background-color: rgba(0, 0, 0, 0.05);
+      color: var(--accent-color);
     }
+    
     .sidebar .tooltip-text {
-      visibility: hidden;
-      background-color: #000000;
+      position: absolute;
+      left: 70px;
+      opacity: 0;
+      background-color: var(--primary-color);
       color: #ffffff;
       text-align: center;
       border-radius: 6px;
-      padding: 5px 10px;
-      position: absolute;
-      z-index: 1;
-      left: 70px;
-      top: 50%;
-      transform: translateY(-50%);
+      padding: 8px 16px;
+      font-size: 14px;
       white-space: nowrap;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
     }
-    .sidebar a:hover .tooltip-text, .sidebar button:hover .tooltip-text {
-      visibility: visible;
+    
+    .sidebar:hover .tooltip-text {
+      opacity: 1;
     }
+    
     .main-content {
-      margin-left: 60px;
+      margin-left: 80px;
+      transition: margin-left 0.3s ease;
     }
+    
+    .sidebar:hover + .main-content {
+      margin-left: 220px;
+    }
+    
     .pin-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      grid-gap: 16px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      grid-gap: 24px;
       align-items: start;
     }
+    
     .pin-card {
       break-inside: avoid;
-      margin-bottom: 16px;
+      margin-bottom: 0;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+    
+    .pin-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    
+    .category-btn {
+      transition: all 0.2s ease;
+    }
+    
+    .category-btn.active {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    
+    .artwork-image {
+      height: 300px;
+      object-fit: cover;
+      transition: transform 0.5s ease;
+    }
+    
+    .pin-card:hover .artwork-image {
+      transform: scale(1.03);
+    }
+    
     ::-webkit-scrollbar {
       width: 8px;
+      height: 8px;
     }
+    
     ::-webkit-scrollbar-track {
       background: #f1f1f1;
     }
+    
     ::-webkit-scrollbar-thumb {
-      background: #000000;
+      background: var(--primary-color);
       border-radius: 4px;
     }
+    
     ::-webkit-scrollbar-thumb:hover {
-      background: #333333;
+      background: var(--secondary-color);
     }
+    
+    .scrollbar-hide::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .scrollbar-hide {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+        padding-top: 20px;
+      }
+      
+      .main-content {
+        margin-left: 60px;
+      }
+      
+      .sidebar:hover {
+        width: 60px;
+      }
+      
+      .sidebar:hover + .main-content {
+        margin-left: 60px;
+      }
+      
+      .sidebar .tooltip-text {
+        display: none;
+      }
+    }
+    
     @media (max-width: 640px) {
       .pin-grid {
         grid-template-columns: 1fr;
       }
+      
       .main-content {
         margin-left: 0;
       }
+      
       .sidebar {
         display: none;
       }
+      
+      .mobile-bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: white;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+      }
+    }
+    
+    /* Animation classes */
+    .fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .slide-up {
+      animation: slideUp 0.4s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
     }
   </style>
 </head>
 <body>
   <!-- Sidebar -->
-  <div class="sidebar d-flex">
+  <div class="sidebar">
     <a href="home.html" class="material-icons">home<span class="tooltip-text">Home</span></a>
     <a href="profile.html" class="material-icons">person<span class="tooltip-text">Profile</span></a>
     <a href="chat.html" class="material-icons">chat<span class="tooltip-text">Chat</span></a>
-    <a href="create.html" class="material-icons d-none hidden" id="createLink">add_box<span class="tooltip-text">Create</span></a>
+    <a href="create.html" class="material-icons d-none" id="createLink">add_box<span class="tooltip-text">Create</span></a>
     <button id="logoutBtn" class="material-icons border-0 bg-transparent">logout<span class="tooltip-text">Log Out</span></button>
   </div>
 
@@ -107,57 +238,95 @@
     <header class="bg-black text-white shadow-sm sticky top-0 z-50">
       <div class="container mx-auto px-4 py-3 flex items-center justify-between">
         <!-- Logo -->
-        <div class="flex items-center space-x-2">
-          <svg class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1.06 13.54L7.4 12l1.41-1.41 2.12 2.12 4.24-4.24 1.41 1.41-5.64 5.66z"/>
-          </svg>
-          <span class="text-xl font-bold">Imnoir</span>
+        <div class="flex items-center space-x-3">
+          <img src="https://i.ibb.co/vv1RvTbk/imnoir.png" alt="Imnoir Logo" class="h-8 w-auto">
+          <span class="text-xl font-bold hidden sm:block">Imnoir</span>
         </div>
+        
         <!-- Search -->
-        <div class="hidden md:flex flex-1 max-w-lg mx-4">
+        <div class="hidden md:flex flex-1 max-w-xl mx-4">
           <div class="relative w-full">
-            <input type="text" id="searchInput" placeholder="Search artworks..." class="w-full bg-gray-100 rounded-full py-2 px-4 pl-10 text-black focus:outline-none focus:ring-2 focus:ring-black">
+            <input type="text" id="searchInput" placeholder="Search artworks, artists..." class="w-full bg-gray-100 rounded-full py-2 px-4 pl-10 text-black focus:outline-none focus:ring-2 focus:ring-black transition-all duration-200">
             <span class="absolute left-3 top-2.5 text-gray-600 material-icons">search</span>
           </div>
         </div>
+        
         <!-- Profile -->
-        <span id="userProfile" class="flex items-center space-x-2">
-          <img src="" id="profileImg" class="w-8 h-8 rounded-full border border-white" alt="Profile">
-          <span id="username" class="text-sm text-white"></span>
-        </span>
+        <div id="userProfile" class="flex items-center space-x-3 cursor-pointer group">
+          <img src="" id="profileImg" class="w-8 h-8 rounded-full border-2 border-white group-hover:border-accent-color transition-all duration-200" alt="Profile">
+          <span id="username" class="text-sm hidden md:block"></span>
+        </div>
       </div>
     </header>
 
-    <main class="container mx-auto px-4 py-6">
+    <main class="container mx-auto px-4 py-8">
       <!-- Categories -->
-      <div class="flex overflow-x-auto pb-4 mb-4 scrollbar-hide">
-        <div class="flex space-x-2 whitespace-nowrap">
-          <button class="bg-black text-white px-4 py-2 rounded-full text-sm font-medium">All</button>
-          <button class="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-full text-sm font-medium">Digital Art</button>
-          <button class="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-full text-sm font-medium">Photography</button>
-          <button class="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-full text-sm font-medium">Painting</button>
-          <button class="bg-gray-200 hover:bg-gray-300 text-black px-4 py-2 rounded-full text-sm font-medium">Sculpture</button>
+      <div class="flex overflow-x-auto pb-6 mb-6 scrollbar-hide">
+        <div class="flex space-x-3 whitespace-nowrap">
+          <button class="category-btn active bg-black text-white px-5 py-2 rounded-full text-sm font-medium hover:bg-gray-800 transition-all">All</button>
+          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Digital Art</button>
+          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Photography</button>
+          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Painting</button>
+          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Sculpture</button>
+          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Illustration</button>
+          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">3D Art</button>
         </div>
       </div>
 
-      <!-- Artwork Grid -->
-      <div class="w-full">
-        <div class="pin-grid" id="artworkGrid"></div>
+      <!-- Featured Section -->
+      <section class="mb-10 slide-up">
+        <h2 class="text-2xl font-bold mb-4">Featured Artworks</h2>
+        <div class="pin-grid">
+          <!-- Featured artworks will be loaded here -->
+        </div>
+      </section>
+
+      <!-- Recent Artworks -->
+      <section class="mb-10 slide-up">
+        <h2 class="text-2xl font-bold mb-4">Recent Uploads</h2>
+        <div class="pin-grid" id="artworkGrid">
+          <!-- Artworks will be loaded here -->
+        </div>
+      </section>
+      
+      <!-- Loading Spinner -->
+      <div id="loadingSpinner" class="flex justify-center items-center py-10">
+        <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
       </div>
     </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <div class="mobile-bottom-nav md:hidden">
+    <a href="home.html" class="flex flex-col items-center justify-center py-3 px-4 flex-1 text-black hover:text-accent-color transition-colors">
+      <span class="material-icons">home</span>
+      <span class="text-xs mt-1">Home</span>
+    </a>
+    <a href="profile.html" class="flex flex-col items-center justify-center py-3 px-4 flex-1 text-black hover:text-accent-color transition-colors">
+      <span class="material-icons">person</span>
+      <span class="text-xs mt-1">Profile</span>
+    </a>
+    <a href="chat.html" class="flex flex-col items-center justify-center py-3 px-4 flex-1 text-black hover:text-accent-color transition-colors">
+      <span class="material-icons">chat</span>
+      <span class="text-xs mt-1">Chat</span>
+    </a>
+    <a href="create.html" class="flex flex-col items-center justify-center py-3 px-4 flex-1 text-black hover:text-accent-color transition-colors d-none" id="mobileCreateLink">
+      <span class="material-icons">add_box</span>
+      <span class="text-xs mt-1">Create</span>
+    </a>
   </div>
 
   <!-- Message Modal -->
   <div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content rounded-lg overflow-hidden">
         <div class="modal-header bg-black text-white border-0">
-          <h5 class="modal-title" id="messageModalLabel"></h5>
+          <h5 class="modal-title font-bold" id="messageModalLabel"></h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body" id="messageModalBody"></div>
-        <div class="modal-footer border-0">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+        <div class="modal-body p-4" id="messageModalBody"></div>
+        <div class="modal-footer border-0 bg-gray-50">
+          <button type="button" class="btn btn-dark rounded-full px-4" data-bs-dismiss="modal">OK</button>
         </div>
       </div>
     </div>
@@ -168,58 +337,121 @@
     // DOM Elements
     const logoutBtn = document.getElementById('logoutBtn');
     const createLink = document.getElementById('createLink');
+    const mobileCreateLink = document.getElementById('mobileCreateLink');
     const profileImg = document.getElementById('profileImg');
     const usernameEl = document.getElementById('username');
     const artworkGrid = document.getElementById('artworkGrid');
+    const loadingSpinner = document.getElementById('loadingSpinner');
     const messageModal = document.getElementById('messageModal');
     const messageModalLabel = document.getElementById('messageModalLabel');
     const messageModalBody = document.getElementById('messageModalBody');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+
+    // Category selection
+    categoryBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        categoryBtns.forEach(b => b.classList.remove('active', 'bg-black', 'text-white'));
+        btn.classList.add('active', 'bg-black', 'text-white');
+        // Here you would filter artworks by category
+      });
+    });
 
     // Show Message Modal
     function showMessage(title, message, isError = true) {
       messageModalLabel.textContent = title;
       messageModalBody.textContent = message;
-      messageModalBody.className = `modal-body ${isError ? 'text-danger' : 'text-success'}`;
+      messageModalBody.className = `modal-body p-4 ${isError ? 'text-red-500' : 'text-green-500'}`;
       const modal = new bootstrap.Modal(messageModal);
       modal.show();
     }
 
     // Display Artwork
-    function displayArtwork(artwork) {
+    function displayArtwork(artwork, isFeatured = false) {
       const div = document.createElement('div');
-      div.className = 'pin-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300';
+      div.className = `pin-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 fade-in ${isFeatured ? 'featured-artwork' : ''}`;
+      
+      // Format date
+      const date = artwork.createdAt.toDate();
+      const formattedDate = date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      
       div.innerHTML = `
-        <img src="${artwork.imageUrl}" alt="Artwork" class="w-full h-48 object-cover">
+        <div class="relative overflow-hidden">
+          <img src="${artwork.imageUrl}" alt="${artwork.title || 'Artwork'}" class="artwork-image w-full">
+          ${isFeatured ? '<span class="absolute top-3 left-3 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full">Featured</span>' : ''}
+        </div>
         <div class="p-4">
-          <p class="text-sm text-gray-600 mb-2">${artwork.description}</p>
+          <h3 class="font-semibold text-lg mb-1 truncate">${artwork.title || 'Untitled'}</h3>
+          <p class="text-gray-600 text-sm mb-3 line-clamp-2">${artwork.description || 'No description provided'}</p>
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <img src="${artwork.profileImageUrl || 'https://via.placeholder.com/40'}" alt="User" class="w-8 h-8 rounded-full">
+              <img src="${artwork.profileImageUrl || 'https://via.placeholder.com/40'}" alt="${artwork.username}" class="w-8 h-8 rounded-full object-cover">
               <span class="text-sm font-medium">${artwork.username}</span>
             </div>
             <div class="flex space-x-3">
-              <button class="flex items-center space-x-1 text-gray-500 hover:text-red-500">
+              <button class="like-btn flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors" data-artwork-id="${artwork.id}">
                 <span class="material-icons text-sm">favorite</span>
-                <span class="text-xs">0</span>
+                <span class="text-xs like-count">${artwork.likes || 0}</span>
               </button>
-              <button class="flex items-center space-x-1 text-gray-500 hover:text-blue-500">
+              <button class="comment-btn flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors">
                 <span class="material-icons text-sm">chat_bubble</span>
-                <span class="text-xs">0</span>
+                <span class="text-xs">${artwork.comments || 0}</span>
               </button>
             </div>
           </div>
-          <small class="text-gray-500 text-xs mt-2 block">${new Date(artwork.createdAt.toDate()).toLocaleString()}</small>
+          <small class="text-gray-500 text-xs mt-2 block">${formattedDate}</small>
         </div>
       `;
-      artworkGrid.appendChild(div);
+      
+      if (isFeatured) {
+        document.querySelector('.pin-grid').prepend(div);
+      } else {
+        artworkGrid.appendChild(div);
+      }
     }
+
+    // Simulate loading (in real app, this would be Firebase data)
+    setTimeout(() => {
+      loadingSpinner.style.display = 'none';
+      
+      // Display sample featured artwork
+      displayArtwork({
+        id: 'featured1',
+        imageUrl: 'https://source.unsplash.com/random/600x400/?art',
+        title: 'Featured Artwork',
+        description: 'This is a featured artwork with vibrant colors and unique composition.',
+        username: 'FeaturedArtist',
+        profileImageUrl: 'https://source.unsplash.com/random/40x40/?portrait',
+        createdAt: { toDate: () => new Date() },
+        likes: 42,
+        comments: 8
+      }, true);
+      
+      // Display sample artworks
+      for (let i = 0; i < 6; i++) {
+        displayArtwork({
+          id: 'art' + i,
+          imageUrl: `https://source.unsplash.com/random/600x400/?art,${i}`,
+          title: i % 2 === 0 ? `Artwork Title ${i+1}` : '',
+          description: i % 3 === 0 ? 'This is a sample artwork description that might be a bit longer to test the layout.' : 'Short description',
+          username: `Artist${i}`,
+          profileImageUrl: `https://source.unsplash.com/random/40x40/?portrait,${i}`,
+          createdAt: { toDate: () => new Date(Date.now() - (i * 86400000)) },
+          likes: Math.floor(Math.random() * 50),
+          comments: Math.floor(Math.random() * 10)
+        });
+      }
+    }, 1500);
   </script>
 
   <script type="module">
     // Firebase Imports
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
     // Firebase Config
     const firebaseConfig = {
@@ -237,26 +469,29 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // DOM Elements
-    const logoutBtn = document.getElementById('logoutBtn');
-    const createLink = document.getElementById('createLink');
-    const profileImg = document.getElementById('profileImg');
-    const usernameEl = document.getElementById('username');
-    const artworkGrid = document.getElementById('artworkGrid');
-
     // Load User Profile
     async function loadUserProfile(user) {
       try {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          usernameEl.textContent = `${userData.username} (${userData.accountType || 'Not set'})`;
-          profileImg.src = userData.profileImageUrl || 'https://via.placeholder.com/40';
-          if (userData.accountType === 'Creator/Artist') {
-            createLink.classList.remove('d-none', 'hidden');
+          usernameEl.textContent = userData.username;
+          if (userData.profileImageUrl) {
+            profileImg.src = userData.profileImageUrl;
+            profileImg.onerror = () => {
+              profileImg.src = 'https://via.placeholder.com/40';
+            };
+          } else {
+            profileImg.src = 'https://via.placeholder.com/40';
           }
+          
+          if (userData.accountType === 'Creator/Artist') {
+            createLink.classList.remove('d-none');
+            mobileCreateLink.classList.remove('d-none');
+          }
+          
           if (!userData.hasCompletedSetup) {
-            window.location.href = 'test.html';
+            window.location.href = 'setup.html';
           }
         } else {
           showMessage('Error', 'User profile not found');
@@ -269,12 +504,41 @@
 
     // Load Artworks
     function loadArtworks() {
-      const q = query(collection(db, 'artworks'), orderBy('createdAt', 'desc'));
-      onSnapshot(q, (snapshot) => {
-        artworkGrid.innerHTML = '';
+      loadingSpinner.style.display = 'flex';
+      
+      // Featured artworks query
+      const featuredQuery = query(
+        collection(db, 'artworks'),
+        where('isFeatured', '==', true),
+        orderBy('createdAt', 'desc'),
+        limit(3)
+      );
+      
+      // Regular artworks query
+      const artworksQuery = query(
+        collection(db, 'artworks'),
+        orderBy('createdAt', 'desc')
+      );
+      
+      // Listen for featured artworks
+      onSnapshot(featuredQuery, (snapshot) => {
+        const featuredContainer = document.querySelector('.pin-grid');
+        featuredContainer.innerHTML = '';
         snapshot.forEach((doc) => {
-          displayArtwork(doc.data());
+          displayArtwork({ id: doc.id, ...doc.data() }, true);
         });
+      });
+      
+      // Listen for all artworks
+      onSnapshot(artworksQuery, (snapshot) => {
+        artworkGrid.innerHTML = '';
+        loadingSpinner.style.display = 'none';
+        snapshot.forEach((doc) => {
+          displayArtwork({ id: doc.id, ...doc.data() });
+        });
+      }, (error) => {
+        loadingSpinner.style.display = 'none';
+        showMessage('Error', 'Failed to load artworks: ' + error.message);
       });
     }
 
