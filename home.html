@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Imnoir - Discover Creative Artworks</title>
   <meta name="description" content="Imnoir - A platform for artists and art enthusiasts to share and discover creative artworks">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
@@ -56,6 +56,7 @@
       justify-content: center;
       padding: 10px 0;
       border-radius: 8px;
+      text-decoration: none;
     }
     
     .sidebar a:hover, .sidebar button:hover {
@@ -155,6 +156,65 @@
       scrollbar-width: none;
     }
     
+    /* Create Post Modal */
+    .create-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .create-modal-content {
+      background-color: white;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+    
+    .preview-image {
+      max-height: 200px;
+      object-fit: contain;
+      margin: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .image-preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .remove-image-btn {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: red;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    
+    .image-preview-item {
+      position: relative;
+    }
+    
     @media (max-width: 768px) {
       .sidebar {
         width: 60px;
@@ -202,25 +262,6 @@
         z-index: 100;
       }
     }
-    
-    /* Animation classes */
-    .fade-in {
-      animation: fadeIn 0.5s ease-in;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    
-    .slide-up {
-      animation: slideUp 0.4s ease-out;
-    }
-    
-    @keyframes slideUp {
-      from { transform: translateY(20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
   </style>
 </head>
 <body>
@@ -229,7 +270,7 @@
     <a href="home.html" class="material-icons">home<span class="tooltip-text">Home</span></a>
     <a href="profile.html" class="material-icons">person<span class="tooltip-text">Profile</span></a>
     <a href="chat.html" class="material-icons">chat<span class="tooltip-text">Chat</span></a>
-    <a href="create.html" class="material-icons d-none" id="createLink">add_box<span class="tooltip-text">Create</span></a>
+    <a href="#" id="createLink" class="material-icons d-none">add_box<span class="tooltip-text">Create</span></a>
     <button id="logoutBtn" class="material-icons border-0 bg-transparent">logout<span class="tooltip-text">Log Out</span></button>
   </div>
 
@@ -268,26 +309,11 @@
           <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Photography</button>
           <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Painting</button>
           <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Sculpture</button>
-          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">Illustration</button>
-          <button class="category-btn bg-gray-200 hover:bg-gray-300 text-black px-5 py-2 rounded-full text-sm font-medium transition-all">3D Art</button>
         </div>
       </div>
 
-      <!-- Featured Section -->
-      <section class="mb-10 slide-up">
-        <h2 class="text-2xl font-bold mb-4">Featured Artworks</h2>
-        <div class="pin-grid">
-          <!-- Featured artworks will be loaded here -->
-        </div>
-      </section>
-
-      <!-- Recent Artworks -->
-      <section class="mb-10 slide-up">
-        <h2 class="text-2xl font-bold mb-4">Recent Uploads</h2>
-        <div class="pin-grid" id="artworkGrid">
-          <!-- Artworks will be loaded here -->
-        </div>
-      </section>
+      <!-- Artwork Grid -->
+      <div class="pin-grid" id="artworkGrid"></div>
       
       <!-- Loading Spinner -->
       <div id="loadingSpinner" class="flex justify-center items-center py-10">
@@ -310,10 +336,48 @@
       <span class="material-icons">chat</span>
       <span class="text-xs mt-1">Chat</span>
     </a>
-    <a href="create.html" class="flex flex-col items-center justify-center py-3 px-4 flex-1 text-black hover:text-accent-color transition-colors d-none" id="mobileCreateLink">
+    <a href="#" id="mobileCreateLink" class="flex flex-col items-center justify-center py-3 px-4 flex-1 text-black hover:text-accent-color transition-colors d-none">
       <span class="material-icons">add_box</span>
       <span class="text-xs mt-1">Create</span>
     </a>
+  </div>
+
+  <!-- Create Post Modal -->
+  <div id="createModal" class="create-modal">
+    <div class="create-modal-content p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">Create New Post</h3>
+        <button id="closeCreateModal" class="material-icons text-gray-500 hover:text-black">close</button>
+      </div>
+      
+      <form id="createPostForm">
+        <div class="mb-4">
+          <label for="postDescription" class="block text-sm font-medium mb-2">Description</label>
+          <textarea id="postDescription" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" placeholder="What's on your mind?"></textarea>
+        </div>
+        
+        <div class="mb-4">
+          <label class="block text-sm font-medium mb-2">Images (Max 10MB each)</label>
+          <div class="flex items-center justify-center w-full">
+            <label for="postImages" class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+              <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                <span class="material-icons text-gray-500 mb-2">cloud_upload</span>
+                <p class="mb-2 text-sm text-gray-500">Click to upload or drag and drop</p>
+                <p class="text-xs text-gray-500">PNG, JPG (MAX. 10MB each)</p>
+              </div>
+              <input id="postImages" type="file" multiple accept="image/*" class="hidden" />
+            </label>
+          </div>
+        </div>
+        
+        <div id="imagePreview" class="image-preview-container mb-4"></div>
+        
+        <div class="flex justify-end space-x-3">
+          <button type="button" id="cancelPost" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">Cancel</button>
+          <button type="submit" id="submitPost" class="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:opacity-50" disabled>Post</button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Message Modal -->
@@ -332,8 +396,32 @@
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-  <script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
+    import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-analytics.js";
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyADQOVZMkfBV1VTtpCo0nwgeUk451gjKXg",
+      authDomain: "imnoir.firebaseapp.com",
+      databaseURL: "https://imnoir-default-rtdb.firebaseio.com",
+      projectId: "imnoir",
+      storageBucket: "imnoir.firebasestorage.app",
+      messagingSenderId: "576802816071",
+      appId: "1:576802816071:web:9bcae0c499a1cd0a433162",
+      measurementId: "G-3W2YYC9PND"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
     // DOM Elements
     const logoutBtn = document.getElementById('logoutBtn');
     const createLink = document.getElementById('createLink');
@@ -346,15 +434,18 @@
     const messageModalLabel = document.getElementById('messageModalLabel');
     const messageModalBody = document.getElementById('messageModalBody');
     const categoryBtns = document.querySelectorAll('.category-btn');
+    const createModal = document.getElementById('createModal');
+    const closeCreateModal = document.getElementById('closeCreateModal');
+    const cancelPost = document.getElementById('cancelPost');
+    const postImages = document.getElementById('postImages');
+    const imagePreview = document.getElementById('imagePreview');
+    const createPostForm = document.getElementById('createPostForm');
+    const submitPost = document.getElementById('submitPost');
 
-    // Category selection
-    categoryBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        categoryBtns.forEach(b => b.classList.remove('active', 'bg-black', 'text-white'));
-        btn.classList.add('active', 'bg-black', 'text-white');
-        // Here you would filter artworks by category
-      });
-    });
+    // Current user data
+    let currentUser = null;
+    let userData = null;
+    let selectedFiles = [];
 
     // Show Message Modal
     function showMessage(title, message, isError = true) {
@@ -366,9 +457,9 @@
     }
 
     // Display Artwork
-    function displayArtwork(artwork, isFeatured = false) {
+    function displayArtwork(artwork) {
       const div = document.createElement('div');
-      div.className = `pin-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 fade-in ${isFeatured ? 'featured-artwork' : ''}`;
+      div.className = 'pin-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300';
       
       // Format date
       const date = artwork.createdAt.toDate();
@@ -380,15 +471,13 @@
       
       div.innerHTML = `
         <div class="relative overflow-hidden">
-          <img src="${artwork.imageUrl}" alt="${artwork.title || 'Artwork'}" class="artwork-image w-full">
-          ${isFeatured ? '<span class="absolute top-3 left-3 bg-yellow-400 text-black text-xs font-bold px-2 py-1 rounded-full">Featured</span>' : ''}
+          <img src="${artwork.images[0]}" alt="${artwork.title || 'Artwork'}" class="artwork-image w-full">
         </div>
         <div class="p-4">
-          <h3 class="font-semibold text-lg mb-1 truncate">${artwork.title || 'Untitled'}</h3>
           <p class="text-gray-600 text-sm mb-3 line-clamp-2">${artwork.description || 'No description provided'}</p>
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <img src="${artwork.profileImageUrl || 'https://via.placeholder.com/40'}" alt="${artwork.username}" class="w-8 h-8 rounded-full object-cover">
+              <img src="${artwork.userProfileImage || 'https://via.placeholder.com/40'}" alt="${artwork.username}" class="w-8 h-8 rounded-full object-cover">
               <span class="text-sm font-medium">${artwork.username}</span>
             </div>
             <div class="flex space-x-3">
@@ -406,141 +495,194 @@
         </div>
       `;
       
-      if (isFeatured) {
-        document.querySelector('.pin-grid').prepend(div);
-      } else {
-        artworkGrid.appendChild(div);
-      }
+      artworkGrid.appendChild(div);
     }
-
-    // Simulate loading (in real app, this would be Firebase data)
-    setTimeout(() => {
-      loadingSpinner.style.display = 'none';
-      
-      // Display sample featured artwork
-      displayArtwork({
-        id: 'featured1',
-        imageUrl: 'https://source.unsplash.com/random/600x400/?art',
-        title: 'Featured Artwork',
-        description: 'This is a featured artwork with vibrant colors and unique composition.',
-        username: 'FeaturedArtist',
-        profileImageUrl: 'https://source.unsplash.com/random/40x40/?portrait',
-        createdAt: { toDate: () => new Date() },
-        likes: 42,
-        comments: 8
-      }, true);
-      
-      // Display sample artworks
-      for (let i = 0; i < 6; i++) {
-        displayArtwork({
-          id: 'art' + i,
-          imageUrl: `https://source.unsplash.com/random/600x400/?art,${i}`,
-          title: i % 2 === 0 ? `Artwork Title ${i+1}` : '',
-          description: i % 3 === 0 ? 'This is a sample artwork description that might be a bit longer to test the layout.' : 'Short description',
-          username: `Artist${i}`,
-          profileImageUrl: `https://source.unsplash.com/random/40x40/?portrait,${i}`,
-          createdAt: { toDate: () => new Date(Date.now() - (i * 86400000)) },
-          likes: Math.floor(Math.random() * 50),
-          comments: Math.floor(Math.random() * 10)
-        });
-      }
-    }, 1500);
-  </script>
-
-  <script type="module">
-    // Firebase Imports
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-    import { getFirestore, doc, getDoc, collection, onSnapshot, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-    // Firebase Config
-    const firebaseConfig = {
-      apiKey: "AIzaSyADQOVZMkfBV1VTtpCo0nwgeUk451gjKXg",
-      authDomain: "imnoir.firebaseapp.com",
-      projectId: "imnoir",
-      storageBucket: "imnoir.firebasestorage.app",
-      messagingSenderId: "576802816071",
-      appId: "1:576802816071:web:9bcae0c499a1cd0a433162",
-      measurementId: "G-3W2YYC9PND"
-    };
-
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
 
     // Load User Profile
     async function loadUserProfile(user) {
       try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          usernameEl.textContent = userData.username;
-          if (userData.profileImageUrl) {
-            profileImg.src = userData.profileImageUrl;
-            profileImg.onerror = () => {
-              profileImg.src = 'https://via.placeholder.com/40';
-            };
-          } else {
-            profileImg.src = 'https://via.placeholder.com/40';
-          }
-          
-          if (userData.accountType === 'Creator/Artist') {
-            createLink.classList.remove('d-none');
-            mobileCreateLink.classList.remove('d-none');
-          }
-          
-          if (!userData.hasCompletedSetup) {
-            window.location.href = 'setup.html';
-          }
-        } else {
-          showMessage('Error', 'User profile not found');
-          window.location.href = 'auth.html';
-        }
+        currentUser = user;
+        
+        // Set basic user info
+        usernameEl.textContent = user.displayName || user.email.split('@')[0];
+        profileImg.src = user.photoURL || 'https://via.placeholder.com/40';
+        
+        // Check if user is an artist to show create button
+        // In a real app, you would check this from Firestore
+        createLink.classList.remove('d-none');
+        mobileCreateLink.classList.remove('d-none');
+        
       } catch (error) {
         showMessage('Error', error.message);
       }
     }
 
-    // Load Artworks
+    // Load Artworks from Firestore
     function loadArtworks() {
       loadingSpinner.style.display = 'flex';
       
-      // Featured artworks query
-      const featuredQuery = query(
-        collection(db, 'artworks'),
-        where('isFeatured', '==', true),
-        orderBy('createdAt', 'desc'),
-        limit(3)
-      );
+      const q = query(collection(db, 'artworks'), orderBy('createdAt', 'desc'));
       
-      // Regular artworks query
-      const artworksQuery = query(
-        collection(db, 'artworks'),
-        orderBy('createdAt', 'desc')
-      );
-      
-      // Listen for featured artworks
-      onSnapshot(featuredQuery, (snapshot) => {
-        const featuredContainer = document.querySelector('.pin-grid');
-        featuredContainer.innerHTML = '';
-        snapshot.forEach((doc) => {
-          displayArtwork({ id: doc.id, ...doc.data() }, true);
-        });
-      });
-      
-      // Listen for all artworks
-      onSnapshot(artworksQuery, (snapshot) => {
+      onSnapshot(q, (snapshot) => {
         artworkGrid.innerHTML = '';
         loadingSpinner.style.display = 'none';
+        
         snapshot.forEach((doc) => {
-          displayArtwork({ id: doc.id, ...doc.data() });
+          const artwork = {
+            id: doc.id,
+            ...doc.data()
+          };
+          displayArtwork(artwork);
         });
       }, (error) => {
         loadingSpinner.style.display = 'none';
         showMessage('Error', 'Failed to load artworks: ' + error.message);
       });
     }
+
+    // Handle image selection
+    postImages.addEventListener('change', (e) => {
+      selectedFiles = Array.from(e.target.files);
+      imagePreview.innerHTML = '';
+      
+      // Validate file sizes
+      let validFiles = true;
+      selectedFiles.forEach(file => {
+        if (file.size > 10 * 1024 * 1024) { // 10MB
+          validFiles = false;
+          showMessage('Error', 'One or more files exceed 10MB limit');
+          return;
+        }
+      });
+      
+      if (!validFiles) {
+        selectedFiles = [];
+        postImages.value = '';
+        return;
+      }
+      
+      // Display previews
+      selectedFiles.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const previewItem = document.createElement('div');
+          previewItem.className = 'image-preview-item';
+          previewItem.innerHTML = `
+            <img src="${e.target.result}" class="preview-image" alt="Preview ${index + 1}">
+            <span class="remove-image-btn material-icons" data-index="${index}">close</span>
+          `;
+          imagePreview.appendChild(previewItem);
+          
+          // Add remove button event
+          previewItem.querySelector('.remove-image-btn').addEventListener('click', () => {
+            selectedFiles.splice(index, 1);
+            previewItem.remove();
+            if (selectedFiles.length === 0) {
+              submitPost.disabled = true;
+            }
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      submitPost.disabled = selectedFiles.length === 0;
+    });
+
+    // Upload images to ImgBB
+    async function uploadImagesToImgBB(files) {
+      const apiKey = 'f1dfad8528c5ca0b474bd822dbf66f20';
+      const uploadPromises = [];
+      
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        
+        uploadPromises.push(
+          fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+            method: 'POST',
+            body: formData
+          })
+          .then(response => response.json())
+          .then(data => data.data.url)
+          .catch(error => {
+            console.error('Error uploading image:', error);
+            return null;
+          })
+        );
+      }
+      
+      return Promise.all(uploadPromises);
+    }
+
+    // Handle post submission
+    createPostForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const description = postDescription.value.trim();
+      
+      if (selectedFiles.length === 0) {
+        showMessage('Error', 'Please select at least one image');
+        return;
+      }
+      
+      submitPost.disabled = true;
+      submitPost.textContent = 'Posting...';
+      
+      try {
+        // Upload images
+        const imageUrls = await uploadImagesToImgBB(selectedFiles);
+        
+        // Filter out any failed uploads
+        const validImageUrls = imageUrls.filter(url => url !== null);
+        
+        if (validImageUrls.length === 0) {
+          throw new Error('Failed to upload images');
+        }
+        
+        // Create post in Firestore
+        await addDoc(collection(db, 'artworks'), {
+          description,
+          images: validImageUrls,
+          userId: currentUser.uid,
+          username: currentUser.displayName || currentUser.email.split('@')[0],
+          userProfileImage: currentUser.photoURL || '',
+          likes: 0,
+          comments: 0,
+          createdAt: serverTimestamp()
+        });
+        
+        // Reset form
+        createPostForm.reset();
+        imagePreview.innerHTML = '';
+        selectedFiles = [];
+        submitPost.disabled = true;
+        submitPost.textContent = 'Post';
+        
+        // Close modal
+        createModal.style.display = 'none';
+        
+        showMessage('Success', 'Your post has been created!', false);
+      } catch (error) {
+        showMessage('Error', error.message);
+        submitPost.disabled = false;
+        submitPost.textContent = 'Post';
+      }
+    });
+
+    // Modal controls
+    [createLink, mobileCreateLink].forEach(btn => {
+      btn.addEventListener('click', () => {
+        createModal.style.display = 'flex';
+      });
+    });
+    
+    closeCreateModal.addEventListener('click', () => {
+      createModal.style.display = 'none';
+    });
+    
+    cancelPost.addEventListener('click', () => {
+      createModal.style.display = 'none';
+    });
 
     // Logout
     logoutBtn.addEventListener('click', async () => {
@@ -550,6 +692,15 @@
       } catch (error) {
         showMessage('Error', error.message);
       }
+    });
+
+    // Category selection
+    categoryBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        categoryBtns.forEach(b => b.classList.remove('active', 'bg-black', 'text-white'));
+        btn.classList.add('active', 'bg-black', 'text-white');
+        // Here you would filter artworks by category
+      });
     });
 
     // Auth State Listener
