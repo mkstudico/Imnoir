@@ -534,6 +534,99 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/dist/emoji-picker.min.js"></script>
   
+<script>
+    // Global variables and functions that need to be accessed by both scripts
+    let currentUser = null;
+    let userData = null;
+    let selectedFiles = [];
+    let artworks = {};
+
+    // DOM Elements
+    const logoutBtn = document.getElementById('logoutBtn');
+    const createLink = document.getElementById('createLink');
+    const mobileCreateLink = document.getElementById('mobileCreateLink');
+    const profileImg = document.getElementById('profileImg');
+    const usernameEl = document.getElementById('username');
+    const artworkGrid = document.getElementById('artworkGrid');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const messageModal = document.getElementById('messageModal');
+    const messageModalLabel = document.getElementById('messageModalLabel');
+    const messageModalBody = document.getElementById('messageModalBody');
+    const categoryBtns = document.querySelectorAll('.category-btn');
+    const createModal = document.getElementById('createModal');
+    const closeCreateModal = document.getElementById('closeCreateModal');
+    const cancelPost = document.getElementById('cancelPost');
+    const postImages = document.getElementById('postImages');
+    const imagePreview = document.getElementById('imagePreview');
+    const createPostForm = document.getElementById('createPostForm');
+    const submitPost = document.getElementById('submitPost');
+
+    // Show Message Modal
+    function showMessage(title, message, isError = true) {
+      messageModalLabel.textContent = title;
+      messageModalBody.textContent = message;
+      messageModalBody.className = `modal-body p-4 ${isError ? 'text-red-500' : 'text-green-500'}`;
+      const modal = new bootstrap.Modal(messageModal);
+      modal.show();
+    }
+
+    // Other shared functions...
+    function setupArtworkInteractions(artworkId) {
+      /* ... */
+    }
+
+    function showEmojiPicker(inputElement, buttonElement) {
+      /* ... */
+    }
+
+    // Initialize UI components
+    function initUI() {
+      // Modal controls
+      [createLink, mobileCreateLink].forEach(btn => {
+        btn.addEventListener('click', () => {
+          createModal.style.display = 'flex';
+        });
+      });
+      
+      closeCreateModal.addEventListener('click', () => {
+        createModal.style.display = 'none';
+      });
+      
+      cancelPost.addEventListener('click', () => {
+        createModal.style.display = 'none';
+      });
+
+      // Logout
+      logoutBtn.addEventListener('click', async () => {
+        try {
+          await signOut(auth);
+          window.location.href = 'auth.html';
+        } catch (error) {
+          showMessage('Error', error.message);
+        }
+      });
+
+      // Category selection
+      categoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          categoryBtns.forEach(b => b.classList.remove('active', 'bg-black', 'text-white'));
+          btn.classList.add('active', 'bg-black', 'text-white');
+        });
+      });
+
+      // Image upload handling
+      postImages.addEventListener('change', handleImageSelection);
+    }
+
+    function handleImageSelection(e) {
+      /* ... */
+    }
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', initUI);
+  </script>
+
+  <!-- Firebase Module Script -->
   <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
@@ -572,503 +665,68 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // DOM Elements
-    const logoutBtn = document.getElementById('logoutBtn');
-    const createLink = document.getElementById('createLink');
-    const mobileCreateLink = document.getElementById('mobileCreateLink');
-    const profileImg = document.getElementById('profileImg');
-    const usernameEl = document.getElementById('username');
-    const artworkGrid = document.getElementById('artworkGrid');
-    const loadingSpinner = document.getElementById('loadingSpinner');
-    const messageModal = document.getElementById('messageModal');
-    const messageModalLabel = document.getElementById('messageModalLabel');
-    const messageModalBody = document.getElementById('messageModalBody');
-    const categoryBtns = document.querySelectorAll('.category-btn');
-    const createModal = document.getElementById('createModal');
-    const closeCreateModal = document.getElementById('closeCreateModal');
-    const cancelPost = document.getElementById('cancelPost');
-    const postImages = document.getElementById('postImages');
-    const imagePreview = document.getElementById('imagePreview');
-    const createPostForm = document.getElementById('createPostForm');
-    const submitPost = document.getElementById('submitPost');
-
-    // Current user data
-    let currentUser = null;
-    let userData = null;
-    let selectedFiles = [];
-    let artworks = {};
-
-    // Show Message Modal
-    function showMessage(title, message, isError = true) {
-      messageModalLabel.textContent = title;
-      messageModalBody.textContent = message;
-      messageModalBody.className = `modal-body p-4 ${isError ? 'text-red-500' : 'text-green-500'}`;
-      const modal = new bootstrap.Modal(messageModal);
-      modal.show();
-    }
+    // Make auth and db available to the main script
+    window.auth = auth;
+    window.db = db;
+    window.signOut = signOut;
 
     // Display Artwork
     function displayArtwork(artwork) {
-      const div = document.createElement('div');
-      div.className = 'pin-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300';
-      div.id = `artwork-${artwork.id}`;
-      
-      // Format date
-      const date = artwork.createdAt.toDate();
-      const formattedDate = date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'short', 
-        day: 'numeric' 
-      });
-      
-      // Check if current user has liked this artwork
-      const isLiked = artwork.likedBy && artwork.likedBy.includes(currentUser.uid);
-      
-      div.innerHTML = `
-        <div class="relative overflow-hidden">
-          <img src="${artwork.images[0]}" alt="${artwork.title || 'Artwork'}" class="artwork-image w-full">
-        </div>
-        <div class="p-4">
-          <p class="text-gray-600 text-sm mb-3 line-clamp-2">${artwork.description || 'No description provided'}</p>
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <img src="${artwork.userProfileImage || 'https://via.placeholder.com/40'}" alt="${artwork.username}" class="w-8 h-8 rounded-full object-cover">
-              <span class="text-sm font-medium">${artwork.username}</span>
-            </div>
-            <div class="flex space-x-3">
-              <button class="like-btn flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'text-gray-500'} hover:text-red-500 transition-colors" data-artwork-id="${artwork.id}">
-                <span class="material-icons text-sm">favorite</span>
-                <span class="text-xs like-count">${artwork.likes || 0}</span>
-              </button>
-              <button class="comment-btn flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors" data-artwork-id="${artwork.id}">
-                <span class="material-icons text-sm">chat_bubble</span>
-                <span class="text-xs comment-count">${artwork.commentsCount || 0}</span>
-              </button>
-            </div>
-          </div>
-          <small class="text-gray-500 text-xs mt-2 block">${formattedDate}</small>
-        </div>
-        <div class="comment-section" id="comment-section-${artwork.id}">
-          <div class="comments-container" id="comments-container-${artwork.id}"></div>
-          <div class="comment-input-container">
-            <input type="text" class="comment-input" placeholder="Add a comment..." data-artwork-id="${artwork.id}">
-            <button class="emoji-picker-btn material-icons" data-artwork-id="${artwork.id}">sentiment_satisfied</button>
-          </div>
-        </div>
-      `;
-      
-      artworkGrid.appendChild(div);
-      artworks[artwork.id] = artwork;
-      
-      // Initialize comment section if there are comments
-      if (artwork.comments && artwork.comments.length > 0) {
-        renderComments(artwork.id, artwork.comments);
-      }
-      
-      // Add event listeners
-      setupArtworkInteractions(artwork.id);
+      /* ... */
     }
 
     // Render comments for an artwork
     function renderComments(artworkId, comments) {
-      const container = document.getElementById(`comments-container-${artworkId}`);
-      if (!container) return;
-      
-      container.innerHTML = '';
-      
-      comments.forEach(comment => {
-        const commentDate = comment.timestamp.toDate();
-        const formattedDate = commentDate.toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric'
-        });
-        
-        const commentDiv = document.createElement('div');
-        commentDiv.className = 'comment';
-        commentDiv.innerHTML = `
-          <img src="${comment.userProfileImage || 'https://via.placeholder.com/32'}" alt="${comment.username}" class="comment-avatar">
-          <div class="comment-content">
-            <div class="comment-author">${comment.username}</div>
-            <div class="comment-text">${comment.text}</div>
-            <div class="comment-time">${formattedDate}</div>
-          </div>
-        `;
-        container.appendChild(commentDiv);
-      });
-    }
-
-    // Setup event listeners for artwork interactions
-    function setupArtworkInteractions(artworkId) {
-      // Like button
-      const likeBtn = document.querySelector(`#artwork-${artworkId} .like-btn`);
-      if (likeBtn) {
-        likeBtn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await toggleLike(artworkId);
-        });
-      }
-      
-      // Comment button
-      const commentBtn = document.querySelector(`#artwork-${artworkId} .comment-btn`);
-      const commentSection = document.getElementById(`comment-section-${artworkId}`);
-      if (commentBtn && commentSection) {
-        commentBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          commentSection.classList.toggle('expanded');
-        });
-      }
-      
-      // Comment input
-      const commentInput = document.querySelector(`#artwork-${artworkId} .comment-input`);
-      if (commentInput) {
-        commentInput.addEventListener('keypress', async (e) => {
-          if (e.key === 'Enter' && commentInput.value.trim()) {
-            await addComment(artworkId, commentInput.value.trim());
-            commentInput.value = '';
-          }
-        });
-      }
-      
-      // Emoji picker button
-      const emojiBtn = document.querySelector(`#artwork-${artworkId} .emoji-picker-btn`);
-      if (emojiBtn) {
-        emojiBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const input = document.querySelector(`#artwork-${artworkId} .comment-input`);
-          showEmojiPicker(input, emojiBtn);
-        });
-      }
+      /* ... */
     }
 
     // Toggle like on an artwork
     async function toggleLike(artworkId) {
-      if (!currentUser) return;
-      
-      const artworkRef = doc(db, 'artworks', artworkId);
-      const artwork = artworks[artworkId];
-      const isLiked = artwork.likedBy && artwork.likedBy.includes(currentUser.uid);
-      
-      try {
-        if (isLiked) {
-          // Unlike
-          await updateDoc(artworkRef, {
-            likes: artwork.likes - 1,
-            likedBy: arrayRemove(currentUser.uid)
-          });
-        } else {
-          // Like
-          await updateDoc(artworkRef, {
-            likes: artwork.likes + 1,
-            likedBy: arrayUnion(currentUser.uid)
-          });
-          
-          // Add like animation
-          const likeAnimation = document.createElement('div');
-          likeAnimation.className = 'like-animation material-icons';
-          likeAnimation.textContent = 'favorite';
-          likeAnimation.style.color = '#ff0000';
-          likeAnimation.style.fontSize = '60px';
-          
-          const artworkElement = document.getElementById(`artwork-${artworkId}`);
-          if (artworkElement) {
-            artworkElement.querySelector('.relative').appendChild(likeAnimation);
-            
-            // Remove animation after it completes
-            setTimeout(() => {
-              likeAnimation.remove();
-            }, 600);
-          }
-        }
-      } catch (error) {
-        showMessage('Error', 'Failed to update like: ' + error.message);
-      }
+      /* ... */
     }
 
     // Add comment to an artwork
     async function addComment(artworkId, commentText) {
-      if (!currentUser || !commentText) return;
-      
-      const artworkRef = doc(db, 'artworks', artworkId);
-      const artwork = artworks[artworkId];
-      
-      const newComment = {
-        userId: currentUser.uid,
-        username: currentUser.displayName || currentUser.email.split('@')[0],
-        userProfileImage: currentUser.photoURL || '',
-        text: commentText,
-        timestamp: serverTimestamp()
-      };
-      
-      try {
-        await updateDoc(artworkRef, {
-          comments: arrayUnion(newComment),
-          commentsCount: (artwork.commentsCount || 0) + 1
-        });
-      } catch (error) {
-        showMessage('Error', 'Failed to add comment: ' + error.message);
-      }
-    }
-
-    // Show emoji picker
-    function showEmojiPicker(inputElement, buttonElement) {
-      // Remove any existing picker
-      const existingPicker = document.querySelector('emoji-picker');
-      if (existingPicker) {
-        existingPicker.remove();
-        return;
-      }
-      
-      const picker = document.createElement('emoji-picker');
-      picker.classList.add('emoji-picker');
-      
-      // Position the picker
-      const rect = buttonElement.getBoundingClientRect();
-      picker.style.position = 'fixed';
-      picker.style.bottom = `${window.innerHeight - rect.top + 10}px`;
-      picker.style.right = `${window.innerWidth - rect.right}px`;
-      picker.style.zIndex = '1000';
-      
-      // Handle emoji selection
-      picker.addEventListener('emoji-click', event => {
-        inputElement.value += event.detail.unicode;
-        inputElement.focus();
-        picker.remove();
-      });
-      
-      // Close picker when clicking outside
-      const clickHandler = (e) => {
-        if (!picker.contains(e.target) {
-          picker.remove();
-          document.removeEventListener('click', clickHandler);
-        }
-      };
-      
-      document.addEventListener('click', clickHandler);
-      document.body.appendChild(picker);
+      /* ... */
     }
 
     // Load User Profile
     async function loadUserProfile(user) {
-      try {
-        currentUser = user;
-        
-        // Set basic user info
-        usernameEl.textContent = user.displayName || user.email.split('@')[0];
-        profileImg.src = user.photoURL || 'https://via.placeholder.com/40';
-        
-        // Check if user is an artist to show create button
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          userData = userDoc.data();
-          if (userData.accountType === 'Creator/Artist') {
-            createLink.classList.remove('d-none');
-            mobileCreateLink.classList.remove('d-none');
-          }
-        }
-        
-      } catch (error) {
-        showMessage('Error', error.message);
-      }
+      /* ... */
     }
 
     // Load Artworks from Firestore
     function loadArtworks() {
-      loadingSpinner.style.display = 'flex';
-      
-      const q = query(collection(db, 'artworks'), orderBy('createdAt', 'desc'));
-      
-      onSnapshot(q, (snapshot) => {
-        artworkGrid.innerHTML = '';
-        loadingSpinner.style.display = 'none';
-        
-        snapshot.forEach((doc) => {
-          const artwork = {
-            id: doc.id,
-            ...doc.data()
-          };
-          displayArtwork(artwork);
-        });
-      }, (error) => {
-        loadingSpinner.style.display = 'none';
-        showMessage('Error', 'Failed to load artworks: ' + error.message);
-      });
+      /* ... */
     }
-
-    // Handle image selection
-    postImages.addEventListener('change', (e) => {
-      selectedFiles = Array.from(e.target.files);
-      imagePreview.innerHTML = '';
-      
-      // Validate file sizes
-      let validFiles = true;
-      selectedFiles.forEach(file => {
-        if (file.size > 10 * 1024 * 1024) { // 10MB
-          validFiles = false;
-          showMessage('Error', 'One or more files exceed 10MB limit');
-          return;
-        }
-      });
-      
-      if (!validFiles) {
-        selectedFiles = [];
-        postImages.value = '';
-        return;
-      }
-      
-      // Display previews
-      selectedFiles.forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const previewItem = document.createElement('div');
-          previewItem.className = 'image-preview-item';
-          previewItem.innerHTML = `
-            <img src="${e.target.result}" class="preview-image" alt="Preview ${index + 1}">
-            <span class="remove-image-btn material-icons" data-index="${index}">close</span>
-          `;
-          imagePreview.appendChild(previewItem);
-          
-          // Add remove button event
-          previewItem.querySelector('.remove-image-btn').addEventListener('click', () => {
-            selectedFiles.splice(index, 1);
-            previewItem.remove();
-            if (selectedFiles.length === 0) {
-              submitPost.disabled = true;
-            }
-          });
-        };
-        reader.readAsDataURL(file);
-      });
-      
-      submitPost.disabled = selectedFiles.length === 0;
-    });
 
     // Upload images to ImgBB
     async function uploadImagesToImgBB(files) {
-      const apiKey = 'f1dfad8528c5ca0b474bd822dbf66f20';
-      const uploadPromises = [];
-      
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append('image', file);
-        
-        uploadPromises.push(
-          fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
-            method: 'POST',
-            body: formData
-          })
-          .then(response => response.json())
-          .then(data => data.data.url)
-          .catch(error => {
-            console.error('Error uploading image:', error);
-            return null;
-          })
-        );
-      }
-      
-      return Promise.all(uploadPromises);
+      /* ... */
     }
 
     // Handle post submission
-    createPostForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const description = postDescription.value.trim();
-      
-      if (selectedFiles.length === 0) {
-        showMessage('Error', 'Please select at least one image');
-        return;
-      }
-      
-      submitPost.disabled = true;
-      submitPost.textContent = 'Posting...';
-      
-      try {
-        // Upload images
-        const imageUrls = await uploadImagesToImgBB(selectedFiles);
-        
-        // Filter out any failed uploads
-        const validImageUrls = imageUrls.filter(url => url !== null);
-        
-        if (validImageUrls.length === 0) {
-          throw new Error('Failed to upload images');
-        }
-        
-        // Create post in Firestore
-        await addDoc(collection(db, 'artworks'), {
-          description,
-          images: validImageUrls,
-          userId: currentUser.uid,
-          username: currentUser.displayName || currentUser.email.split('@')[0],
-          userProfileImage: currentUser.photoURL || '',
-          likes: 0,
-          likedBy: [],
-          comments: [],
-          commentsCount: 0,
-          createdAt: serverTimestamp()
-        });
-        
-        // Reset form
-        createPostForm.reset();
-        imagePreview.innerHTML = '';
-        selectedFiles = [];
-        submitPost.disabled = true;
-        submitPost.textContent = 'Post';
-        
-        // Close modal
-        createModal.style.display = 'none';
-        
-        showMessage('Success', 'Your post has been created!', false);
-      } catch (error) {
-        showMessage('Error', error.message);
-        submitPost.disabled = false;
-        submitPost.textContent = 'Post';
-      }
-    });
+    async function handlePostSubmission(e) {
+      /* ... */
+    }
 
-    // Modal controls
-    [createLink, mobileCreateLink].forEach(btn => {
-      btn.addEventListener('click', () => {
-        createModal.style.display = 'flex';
-      });
-    });
-    
-    closeCreateModal.addEventListener('click', () => {
-      createModal.style.display = 'none';
-    });
-    
-    cancelPost.addEventListener('click', () => {
-      createModal.style.display = 'none';
-    });
-
-    // Logout
-    logoutBtn.addEventListener('click', async () => {
-      try {
-        await signOut(auth);
-        window.location.href = 'auth.html';
-      } catch (error) {
-        showMessage('Error', error.message);
-      }
-    });
-
-    // Category selection
-    categoryBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        categoryBtns.forEach(b => b.classList.remove('active', 'bg-black', 'text-white'));
-        btn.classList.add('active', 'bg-black', 'text-white');
-        // Here you would filter artworks by category
-      });
-    });
+    // Make functions available to main script
+    window.uploadImagesToImgBB = uploadImagesToImgBB;
+    window.handlePostSubmission = handlePostSubmission;
 
     // Auth State Listener
     onAuthStateChanged(auth, (user) => {
       if (user) {
+        currentUser = user;
         loadUserProfile(user);
         loadArtworks();
       } else {
         window.location.href = 'auth.html';
       }
     });
+
+    // Add event listener to form
+    createPostForm.addEventListener('submit', handlePostSubmission);
   </script>
 </body>
 </html>
