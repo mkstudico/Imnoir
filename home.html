@@ -9,6 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/emoji-picker/1.1.5/css/emoji.min.css">
   <style>
     :root {
       --primary-color: #000000;
@@ -123,6 +124,7 @@
       height: 300px;
       object-fit: cover;
       transition: transform 0.5s ease;
+      cursor: pointer;
     }
     
     .pin-card:hover .artwork-image {
@@ -215,6 +217,99 @@
       position: relative;
     }
     
+    /* Comment Section */
+    .comment-section {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    
+    .comment-section.expanded {
+      max-height: 400px;
+      padding: 15px;
+      border-top: 1px solid #eee;
+    }
+    
+    .comment {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    
+    .comment-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 10px;
+      object-fit: cover;
+    }
+    
+    .comment-content {
+      flex: 1;
+    }
+    
+    .comment-author {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+    
+    .comment-text {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .comment-time {
+      font-size: 12px;
+      color: #777;
+    }
+    
+    .comment-input-container {
+      display: flex;
+      margin-top: 10px;
+      align-items: center;
+    }
+    
+    .comment-input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 8px 15px;
+      outline: none;
+      font-size: 14px;
+    }
+    
+    .emoji-picker-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      margin-left: 10px;
+      font-size: 20px;
+    }
+    
+    .emoji-picker {
+      position: absolute;
+      bottom: 50px;
+      right: 0;
+      z-index: 10;
+    }
+    
+    /* Like Animation */
+    .like-animation {
+      position: absolute;
+      pointer-events: none;
+      animation: like-animation 0.6s ease;
+      opacity: 0;
+    }
+    
+    @keyframes like-animation {
+      0% { transform: scale(0); opacity: 0; }
+      15% { transform: scale(1.2); opacity: 1; }
+      30% { transform: scale(0.95); }
+      45%, 80% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(0); opacity: 0; }
+    }
+    
+    /* Responsive Adjustments */
     @media (max-width: 768px) {
       .sidebar {
         width: 60px;
@@ -235,6 +330,10 @@
       
       .sidebar .tooltip-text {
         display: none;
+      }
+      
+      .artwork-image {
+        height: 250px;
       }
     }
     
@@ -260,6 +359,39 @@
         background-color: white;
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
         z-index: 100;
+      }
+      
+      .artwork-image {
+        height: 300px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .artwork-image {
+        height: 250px;
+      }
+    }
+    
+    /* Portrait mode adjustments */
+    @media (orientation: portrait) and (max-width: 768px) {
+      .main-content {
+        padding-bottom: 60px; /* Space for bottom nav */
+      }
+      
+      .artwork-image {
+        height: calc(50vh - 100px);
+        max-height: 400px;
+      }
+    }
+    
+    /* Landscape mode adjustments */
+    @media (orientation: landscape) and (max-width: 900px) {
+      .pin-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      }
+      
+      .artwork-image {
+        height: 200px;
       }
     }
   </style>
@@ -396,12 +528,30 @@
     </div>
   </div>
 
+  <!-- Emoji Picker CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/dist/emoji-picker.min.css">
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1.12.0/dist/emoji-picker.min.js"></script>
+  
   <script type="module">
     // Import the functions you need from the SDKs you need
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-auth.js";
-    import { getFirestore, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      collection, 
+      query, 
+      orderBy, 
+      onSnapshot, 
+      addDoc, 
+      serverTimestamp,
+      doc,
+      getDoc,
+      updateDoc,
+      arrayUnion,
+      arrayRemove
+    } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-firestore.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.9.0/firebase-analytics.js";
 
     // Your web app's Firebase configuration
@@ -446,6 +596,7 @@
     let currentUser = null;
     let userData = null;
     let selectedFiles = [];
+    let artworks = {};
 
     // Show Message Modal
     function showMessage(title, message, isError = true) {
@@ -460,6 +611,7 @@
     function displayArtwork(artwork) {
       const div = document.createElement('div');
       div.className = 'pin-card bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300';
+      div.id = `artwork-${artwork.id}`;
       
       // Format date
       const date = artwork.createdAt.toDate();
@@ -468,6 +620,9 @@
         month: 'short', 
         day: 'numeric' 
       });
+      
+      // Check if current user has liked this artwork
+      const isLiked = artwork.likedBy && artwork.likedBy.includes(currentUser.uid);
       
       div.innerHTML = `
         <div class="relative overflow-hidden">
@@ -481,21 +636,216 @@
               <span class="text-sm font-medium">${artwork.username}</span>
             </div>
             <div class="flex space-x-3">
-              <button class="like-btn flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors" data-artwork-id="${artwork.id}">
+              <button class="like-btn flex items-center space-x-1 ${isLiked ? 'text-red-500' : 'text-gray-500'} hover:text-red-500 transition-colors" data-artwork-id="${artwork.id}">
                 <span class="material-icons text-sm">favorite</span>
                 <span class="text-xs like-count">${artwork.likes || 0}</span>
               </button>
-              <button class="comment-btn flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors">
+              <button class="comment-btn flex items-center space-x-1 text-gray-500 hover:text-blue-500 transition-colors" data-artwork-id="${artwork.id}">
                 <span class="material-icons text-sm">chat_bubble</span>
-                <span class="text-xs">${artwork.comments || 0}</span>
+                <span class="text-xs comment-count">${artwork.commentsCount || 0}</span>
               </button>
             </div>
           </div>
           <small class="text-gray-500 text-xs mt-2 block">${formattedDate}</small>
         </div>
+        <div class="comment-section" id="comment-section-${artwork.id}">
+          <div class="comments-container" id="comments-container-${artwork.id}"></div>
+          <div class="comment-input-container">
+            <input type="text" class="comment-input" placeholder="Add a comment..." data-artwork-id="${artwork.id}">
+            <button class="emoji-picker-btn material-icons" data-artwork-id="${artwork.id}">sentiment_satisfied</button>
+          </div>
+        </div>
       `;
       
       artworkGrid.appendChild(div);
+      artworks[artwork.id] = artwork;
+      
+      // Initialize comment section if there are comments
+      if (artwork.comments && artwork.comments.length > 0) {
+        renderComments(artwork.id, artwork.comments);
+      }
+      
+      // Add event listeners
+      setupArtworkInteractions(artwork.id);
+    }
+
+    // Render comments for an artwork
+    function renderComments(artworkId, comments) {
+      const container = document.getElementById(`comments-container-${artworkId}`);
+      if (!container) return;
+      
+      container.innerHTML = '';
+      
+      comments.forEach(comment => {
+        const commentDate = comment.timestamp.toDate();
+        const formattedDate = commentDate.toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        });
+        
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment';
+        commentDiv.innerHTML = `
+          <img src="${comment.userProfileImage || 'https://via.placeholder.com/32'}" alt="${comment.username}" class="comment-avatar">
+          <div class="comment-content">
+            <div class="comment-author">${comment.username}</div>
+            <div class="comment-text">${comment.text}</div>
+            <div class="comment-time">${formattedDate}</div>
+          </div>
+        `;
+        container.appendChild(commentDiv);
+      });
+    }
+
+    // Setup event listeners for artwork interactions
+    function setupArtworkInteractions(artworkId) {
+      // Like button
+      const likeBtn = document.querySelector(`#artwork-${artworkId} .like-btn`);
+      if (likeBtn) {
+        likeBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await toggleLike(artworkId);
+        });
+      }
+      
+      // Comment button
+      const commentBtn = document.querySelector(`#artwork-${artworkId} .comment-btn`);
+      const commentSection = document.getElementById(`comment-section-${artworkId}`);
+      if (commentBtn && commentSection) {
+        commentBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          commentSection.classList.toggle('expanded');
+        });
+      }
+      
+      // Comment input
+      const commentInput = document.querySelector(`#artwork-${artworkId} .comment-input`);
+      if (commentInput) {
+        commentInput.addEventListener('keypress', async (e) => {
+          if (e.key === 'Enter' && commentInput.value.trim()) {
+            await addComment(artworkId, commentInput.value.trim());
+            commentInput.value = '';
+          }
+        });
+      }
+      
+      // Emoji picker button
+      const emojiBtn = document.querySelector(`#artwork-${artworkId} .emoji-picker-btn`);
+      if (emojiBtn) {
+        emojiBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const input = document.querySelector(`#artwork-${artworkId} .comment-input`);
+          showEmojiPicker(input, emojiBtn);
+        });
+      }
+    }
+
+    // Toggle like on an artwork
+    async function toggleLike(artworkId) {
+      if (!currentUser) return;
+      
+      const artworkRef = doc(db, 'artworks', artworkId);
+      const artwork = artworks[artworkId];
+      const isLiked = artwork.likedBy && artwork.likedBy.includes(currentUser.uid);
+      
+      try {
+        if (isLiked) {
+          // Unlike
+          await updateDoc(artworkRef, {
+            likes: artwork.likes - 1,
+            likedBy: arrayRemove(currentUser.uid)
+          });
+        } else {
+          // Like
+          await updateDoc(artworkRef, {
+            likes: artwork.likes + 1,
+            likedBy: arrayUnion(currentUser.uid)
+          });
+          
+          // Add like animation
+          const likeAnimation = document.createElement('div');
+          likeAnimation.className = 'like-animation material-icons';
+          likeAnimation.textContent = 'favorite';
+          likeAnimation.style.color = '#ff0000';
+          likeAnimation.style.fontSize = '60px';
+          
+          const artworkElement = document.getElementById(`artwork-${artworkId}`);
+          if (artworkElement) {
+            artworkElement.querySelector('.relative').appendChild(likeAnimation);
+            
+            // Remove animation after it completes
+            setTimeout(() => {
+              likeAnimation.remove();
+            }, 600);
+          }
+        }
+      } catch (error) {
+        showMessage('Error', 'Failed to update like: ' + error.message);
+      }
+    }
+
+    // Add comment to an artwork
+    async function addComment(artworkId, commentText) {
+      if (!currentUser || !commentText) return;
+      
+      const artworkRef = doc(db, 'artworks', artworkId);
+      const artwork = artworks[artworkId];
+      
+      const newComment = {
+        userId: currentUser.uid,
+        username: currentUser.displayName || currentUser.email.split('@')[0],
+        userProfileImage: currentUser.photoURL || '',
+        text: commentText,
+        timestamp: serverTimestamp()
+      };
+      
+      try {
+        await updateDoc(artworkRef, {
+          comments: arrayUnion(newComment),
+          commentsCount: (artwork.commentsCount || 0) + 1
+        });
+      } catch (error) {
+        showMessage('Error', 'Failed to add comment: ' + error.message);
+      }
+    }
+
+    // Show emoji picker
+    function showEmojiPicker(inputElement, buttonElement) {
+      // Remove any existing picker
+      const existingPicker = document.querySelector('emoji-picker');
+      if (existingPicker) {
+        existingPicker.remove();
+        return;
+      }
+      
+      const picker = document.createElement('emoji-picker');
+      picker.classList.add('emoji-picker');
+      
+      // Position the picker
+      const rect = buttonElement.getBoundingClientRect();
+      picker.style.position = 'fixed';
+      picker.style.bottom = `${window.innerHeight - rect.top + 10}px`;
+      picker.style.right = `${window.innerWidth - rect.right}px`;
+      picker.style.zIndex = '1000';
+      
+      // Handle emoji selection
+      picker.addEventListener('emoji-click', event => {
+        inputElement.value += event.detail.unicode;
+        inputElement.focus();
+        picker.remove();
+      });
+      
+      // Close picker when clicking outside
+      const clickHandler = (e) => {
+        if (!picker.contains(e.target) {
+          picker.remove();
+          document.removeEventListener('click', clickHandler);
+        }
+      };
+      
+      document.addEventListener('click', clickHandler);
+      document.body.appendChild(picker);
     }
 
     // Load User Profile
@@ -508,9 +858,14 @@
         profileImg.src = user.photoURL || 'https://via.placeholder.com/40';
         
         // Check if user is an artist to show create button
-        // In a real app, you would check this from Firestore
-        createLink.classList.remove('d-none');
-        mobileCreateLink.classList.remove('d-none');
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          userData = userDoc.data();
+          if (userData.accountType === 'Creator/Artist') {
+            createLink.classList.remove('d-none');
+            mobileCreateLink.classList.remove('d-none');
+          }
+        }
         
       } catch (error) {
         showMessage('Error', error.message);
@@ -647,7 +1002,9 @@
           username: currentUser.displayName || currentUser.email.split('@')[0],
           userProfileImage: currentUser.photoURL || '',
           likes: 0,
-          comments: 0,
+          likedBy: [],
+          comments: [],
+          commentsCount: 0,
           createdAt: serverTimestamp()
         });
         
