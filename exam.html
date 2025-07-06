@@ -10,6 +10,7 @@
       background-color: #f9f9f9;
       padding: 1rem;
       color: #333;
+      white-space: pre-wrap;
     }
     h2 {
       text-align: center;
@@ -91,6 +92,7 @@
       lines.forEach((line, index) => {
         const lineElem = document.createElement('div');
         lineElem.textContent = line;
+        lineElem.style.whiteSpace = "pre";
         if (rules.visibleLines !== null && index >= rules.visibleLines) {
           lineElem.classList.add('blur');
         }
