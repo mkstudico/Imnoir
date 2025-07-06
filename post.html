@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post Exam</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 1rem;
+      color: #333;
+    }
+
+    .section {
+      margin-bottom: 2rem;
+    }
+
+    label {
+      font-weight: 600;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .upload-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+
+    .upload-preview img {
+      width: 100px;
+      height: auto;
+      border-radius: 8px;
+    }
+
+    .editor-content {
+      min-height: 300px;
+      padding: 1rem;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      white-space: pre-wrap;
+      line-height: 1.5;
+      overflow-wrap: break-word;
+      position: relative;
+      outline: none;
+      max-width: 100%;
+    }
+
+    .page-line {
+      border-top: 2px dashed #ccc;
+      margin: 1rem 0;
+      pointer-events: none;
+    }
+
+    .checkbox-inline {
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.75rem 1.25rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      background: #007aff;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="section">
+    <label for="subject">Choose Subject:</label>
+    <select id="subject">
+      <option>Mathematics</option>
+      <option>Kinyarwanda</option>
+      <option>Biology</option>
+      <option>Physics</option>
+      <option>Chemistry</option>
+      <option>History</option>
+      <option>Geography</option>
+      <option>Entrepreneurship</option>
+    </select>
+  </div>
+
+  <div class="section">
+    <label for="imageUpload">Upload Exam Images:</label>
+    <input type="file" id="imageUpload" multiple accept="image/*" />
+    <div class="upload-preview" id="previewContainer"></div>
+  </div>
+
+  <div class="section">
+    <label>QUESTIONS:</label>
+    <div id="questions" class="editor-content" contenteditable="true" spellcheck="false"></div>
+  </div>
+
+  <div class="section">
+    <label>ANSWERS:</label>
+    <div id="answers" class="editor-content" contenteditable="true" spellcheck="false"></div>
+  </div>
+
+  <div class="section">
+    <label>RULES to apply in view.html</label>
+    <div class="checkbox-inline">
+      <input type="checkbox" id="enableLines" checked />
+      <label for="enableLines">Limit visible lines</label>
+      <input type="number" id="visibleLines" min="1" value="5" />
+    </div>
+    <div class="checkbox-inline">
+      <input type="checkbox" id="enablePages" checked />
+      <label for="enablePages">Limit visible pages</label>
+      <input type="number" id="visiblePages" min="1" value="1" />
+    </div>
+  </div>
+
+  <button onclick="submitPost()">Upload Exam</button>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADQOVZMkfBV1VTtpCo0nwgeUk451gjKXg",
+      authDomain: "imnoir.firebaseapp.com",
+      databaseURL: "https://imnoir-default-rtdb.firebaseio.com",
+      projectId: "imnoir",
+      storageBucket: "imnoir.firebasestorage.app",
+      messagingSenderId: "576802816071",
+      appId: "1:576802816071:web:9bcae0c499a1cd0a433162",
+      measurementId: "G-3W2YYC9PND"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const imageUpload = document.getElementById('imageUpload');
+    const previewContainer = document.getElementById('previewContainer');
+    const questionsEditor = document.getElementById('questions');
+    const answersEditor = document.getElementById('answers');
+    let uploadedImages = [];
+
+    imageUpload.addEventListener('change', async (event) => {
+      const files = event.target.files;
+      for (let file of files) {
+        const formData = new FormData();
+        formData.append('image', file);
+        const res = await fetch('https://api.imgbb.com/1/upload?key=82d2010a938dfd0a780ff9e6c71e68a7', {
+          method: 'POST', body: formData
+        });
+        const data = await res.json();
+        const img = document.createElement('img');
+        img.src = data.data.url;
+        previewContainer.appendChild(img);
+        uploadedImages.push(data.data.url);
+      }
+    });
+
+    function insertPageLines(editor) {
+      [...editor.querySelectorAll('.page-line')].forEach(el => el.remove());
+      let lines = editor.innerText.split('\n');
+      while (lines.length && lines[lines.length - 1].trim() === '') lines.pop();
+      const chunkSize = 25;
+      let newHTML = '';
+      for (let i = 0; i < lines.length; i++) {
+        newHTML += escapeHtml(lines[i]) + '<br>';
+        if ((i + 1) % chunkSize === 0 && i !== lines.length - 1) newHTML += '<div class="page-line"></div>';
+      }
+      editor.innerHTML = newHTML;
+    }
+
+    function escapeHtml(text) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    function onEditorInput(e) {
+      const editor = e.target;
+      insertPageLines(editor);
+      placeCaretAtEnd(editor);
+    }
+
+    function placeCaretAtEnd(el) {
+      el.focus();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    questionsEditor.addEventListener('input', onEditorInput);
+    answersEditor.addEventListener('input', onEditorInput);
+    window.onload = () => {
+      insertPageLines(questionsEditor);
+      insertPageLines(answersEditor);
+    };
+
+    function getCleanText(editor) {
+      [...editor.querySelectorAll('.page-line')].forEach(el => el.remove());
+      const text = editor.innerText.trim();
+      insertPageLines(editor);
+      return text;
+    }
+
+    async function submitPost() {
+      const subject = document.getElementById('subject').value;
+      const questionsRaw = getCleanText(questionsEditor);
+      const answersRaw = getCleanText(answersEditor);
+      const enableLines = document.getElementById('enableLines').checked;
+      const enablePages = document.getElementById('enablePages').checked;
+      const visibleLines = enableLines ? parseInt(document.getElementById('visibleLines').value) : null;
+      const visiblePages = enablePages ? parseInt(document.getElementById('visiblePages').value) : null;
+      const postData = {
+        subject,
+        images: uploadedImages,
+        questions: questionsRaw,
+        answers: answersRaw,
+        rules: {
+          visibleLines,
+          visiblePages
+        },
+        createdAt: serverTimestamp()
+      };
+
+      try {
+        await addDoc(collection(db, 'exams'), postData);
+        alert('Exam uploaded successfully!');
+      } catch (error) {
+        console.error('Error uploading:', error);
+        alert('Failed to upload.');
+      }
+    }
+  </script>
+</body>
+</html>
