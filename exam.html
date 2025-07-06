@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exam View</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f9f9f9;
+      padding: 1rem;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .images {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+    .images img {
+      width: 120px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .section {
+      margin-bottom: 2rem;
+    }
+    .section h3 {
+      margin-bottom: 0.5rem;
+    }
+    .page-line {
+      border-top: 2px dashed #ccc;
+      margin: 1rem 0;
+    }
+    .blur {
+      filter: blur(4px);
+      pointer-events: none;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <h2 id="subjectTitle">Exam</h2>
+  <div class="images" id="imagesContainer"></div>
+
+  <div class="section">
+    <h3>Questions</h3>
+    <div id="questionsContent"></div>
+  </div>
+
+  <div class="section">
+    <h3>Answers</h3>
+    <div id="answersContent"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyADQOVZMkfBV1VTtpCo0nwgeUk451gjKXg",
+      authDomain: "imnoir.firebaseapp.com",
+      databaseURL: "https://imnoir-default-rtdb.firebaseio.com",
+      projectId: "imnoir",
+      storageBucket: "imnoir.firebasestorage.app",
+      messagingSenderId: "576802816071",
+      appId: "1:576802816071:web:9bcae0c499a1cd0a433162",
+      measurementId: "G-3W2YYC9PND"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const subject = urlParams.get("subject");
+    document.getElementById("subjectTitle").textContent = `${subject} Exam`;
+
+    const imagesContainer = document.getElementById("imagesContainer");
+    const questionsContainer = document.getElementById("questionsContent");
+    const answersContainer = document.getElementById("answersContent");
+
+    const PAGE_SIZE = 25;
+
+    function renderTextWithRules(text, rules, container) {
+      const lines = text.split('\n');
+      lines.forEach((line, index) => {
+        const lineElem = document.createElement('div');
+        lineElem.textContent = line;
+        if (rules.visibleLines !== null && index >= rules.visibleLines) {
+          lineElem.classList.add('blur');
+        }
+        container.appendChild(lineElem);
+        if ((index + 1) % PAGE_SIZE === 0) {
+          const line = document.createElement('div');
+          line.className = 'page-line';
+          if (rules.visiblePages !== null && Math.floor(index / PAGE_SIZE) >= rules.visiblePages) {
+            lineElem.classList.add('blur');
+          }
+          container.appendChild(line);
+        }
+      });
+    }
+
+    async function loadExam() {
+      const snapshot = await getDocs(collection(db, "exams"));
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data.subject === subject) {
+          if (data.images && data.images.length) {
+            data.images.forEach(url => {
+              const img = document.createElement("img");
+              img.src = url;
+              imagesContainer.appendChild(img);
+            });
+          }
+          const rules = {
+            visibleLines: data.rules?.visibleLines ?? null,
+            visiblePages: data.rules?.visiblePages ?? null
+          };
+          renderTextWithRules(data.questions, rules, questionsContainer);
+          renderTextWithRules(data.answers, rules, answersContainer);
+        }
+      });
+    }
+
+    loadExam();
+  </script>
+</body>
+</html>
